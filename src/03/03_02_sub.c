@@ -1,5 +1,3 @@
-// 5 - 3n
-
 #include <stdio.h>
 
 int main() {
