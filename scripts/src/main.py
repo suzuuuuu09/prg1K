@@ -1,5 +1,5 @@
 import os
-import zipfile as zf
+from zipfile import ZipFile
 
 def get_file_names(folder_path):
     # フォルダ内のファイル名を取得する
@@ -7,7 +7,7 @@ def get_file_names(folder_path):
     return file_names
 
 def create_zip(folder_path, zip_name):
-    with zf.ZipFile(zip_name, "w") as zip_file:
+    with ZipFile(zip_name, "w") as zip_file:  # 書き込みモードでZIPファイルを作成
         files = get_file_names(folder_path)
         
         for file in files:
