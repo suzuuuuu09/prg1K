@@ -9,7 +9,7 @@ int main() {
 
     crane = (4 * total - legs) / 2;
     tortoise = total - crane;
-    if (crane < 0 || tortoise < 0 || (4 * total - legs) % 2 != 0) {
+    if (crane < 0 || tortoise < 0 || legs % 2 != 0) {
         printf("cannot be combined\n");
     } else {
         printf("crane = %d, tortoise = %d\n", crane, tortoise);
