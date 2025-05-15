@@ -12,7 +12,7 @@ int main() {
 
     if (time == 0) {
         if (dayOfWeek == 1 || dayOfWeek == 2 || dayOfWeek == 3 || dayOfWeek == 4 || dayOfWeek == 5) {
-            isOpen = 0;
+            isOpen = 1;
         }
     }
 
