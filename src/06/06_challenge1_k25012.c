@@ -3,25 +3,23 @@
 
 int main() {
     int n;
-    bool isPrimeNumber = false;
+    int isPrimeNumber = 0;
 
     printf("n? ");
     scanf("%d", &n);
 
     /* 素数の判別をする */
     if (n <= 1) {
-        isPrimeNumber = false;
+        isPrimeNumber = 0;
     } else {
-        isPrimeNumber = true;
-        for (int i = 2; i * i <= n; i++) {
+        for (int i = 2; i * i <= n && isPrimeNumber == 0; i++) {
             if (n % i == 0) {
-                isPrimeNumber = false;
-                break;
+                isPrimeNumber = 1;
             }
         }
     }
 
-    if(isPrimeNumber) {
+    if(isPrimeNumber == 1) {
         printf("素数です\n");
     } else {
         printf("素数ではありません\n");
