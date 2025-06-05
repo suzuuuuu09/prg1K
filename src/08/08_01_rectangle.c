@@ -8,8 +8,9 @@ int main() {
 
   for (int i = 0; i < w; i++) {
     for (int j = 0; j < h; j++) {
-      printf("#");
+      putchar('#');
     }
-    printf("\n");
+    putchar('\n');
   }
+  printf("\n");
 }
