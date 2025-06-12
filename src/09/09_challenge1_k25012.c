@@ -32,12 +32,6 @@ int main() {
     }
   }
   
-  if (isMinus) {
-    answer -= inputNumber;
-  } else {
-    answer += inputNumber;
-  }
-  
   printf("answer: %d\n", answer);
   return 0;
 }
