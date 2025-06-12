@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 int main() {
   double x;
@@ -14,13 +15,13 @@ int main() {
 
   switch(selected) {
     case 1:
-      printf("|%lf| = %lf\n", x, (x < 0) ? -x : x);
+      printf("|%lf| = %f\n", x, fabs(x));
       break;
     case 2:
-      printf("%lf ^ 2 = %lf\n", x, x * x);
+      printf("%lf ^ 2 = %lf\n", x, pow(x, 2));
       break;
     case 3:
-      printf("%lf ^ 3 = %lf\n", x, x * x * x);
+      printf("%lf ^ 3 = %lf\n", x, pow(x, 3));
       break;
   }
 }

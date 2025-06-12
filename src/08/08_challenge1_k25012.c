@@ -1,25 +1,26 @@
 #include <stdio.h>
 
 int main() {
-  int input=0;
+  int input;
 
   printf("input? ");
   scanf("%d", &input);
-  int num = input;
-  int factor = 2;
-  
-  while (num > 1) {
-    if (num % factor == 0) {
-      printf("%d", factor);
-      num /= factor;
-      if (num > 1) {
+
+  for(int i=2;i*i<=input;i++)
+  {
+    while(input%i==0)
+    {
+      input /= i;
+      printf("%d", i);
+      if(input != 1)
         printf(", ");
-      }
-    } else {
-      factor++;
+      else
+        break;
     }
   }
-  printf("\n");
+  if(input != 1)
+    printf("%d",input);
 
+  printf("\n");
   return 0;
 }
