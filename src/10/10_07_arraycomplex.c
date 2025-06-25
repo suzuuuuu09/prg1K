@@ -18,7 +18,7 @@ int main() {
   for (int i = 0; i < 5; i++) {
     standardWeight = (heights[i] - 100) * 0.9;
     bmi = weights[i] / pow(heights[i] / 100.0, 2);
-    if(bmi > THRESHOLD) {
+    if(bmi >= THRESHOLD) {
       printf("\n%d人目のBMI: %f, 標準体重との差: %f", i + 1, bmi, fabs(weights[i] - standardWeight));
     }
   }

@@ -3,6 +3,7 @@
 int main() {
   int primeNumbers[100] = {0};
   int isPrime = 0;
+  int count = 0;
 
   for (int i = 2; i < 100; i++) {
     for(int j = 0; j < 100; j++) {
@@ -16,6 +17,7 @@ int main() {
         }
         if (isPrime) {
           primeNumbers[j] = i;
+          count++;
           break;
         }
       }
@@ -23,10 +25,8 @@ int main() {
 
   }
 
-  for (int i = 0; i < 100; i++) {
-    if (primeNumbers[i] != 0) {
-      printf("%d, ", primeNumbers[i]);
-    }
+  for (int i = 0; i < count; i++) {
+    printf("%d, ", primeNumbers[i]);
   }
 
   printf("\n");
