@@ -10,9 +10,14 @@
 #define COLOR_RED "\033[31m"
 #define COLOR_RESET "\033[0m"
 
-/* これで配列の長さ計算しないとなぜかエラーなる */
+// これで配列の長さ計算しないとなぜかエラーなる
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-#define print_cards(cards) _print_cards(cards, ARRAY_SIZE(cards)) /* 複数のカードを出すときに使う */
+
+/*
+ * @brief 配列でカードを横並びで出力する関数
+ * @param cards Card構造体の配列
+*/
+#define print_cards(cards) _print_cards(cards, ARRAY_SIZE(cards));
 
 static const char* SUIT_SYMBOLS[] = {"♠", "♣", "❤︎", "♦"};
 static const char* NUMBER_SYMBOLS[] = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
@@ -23,7 +28,7 @@ static const char* NUMBER_SYMBOLS[] = {"A", "2", "3", "4", "5", "6", "7", "8", "
  * @return 赤色の場合true、黒色の場合false
  */
 bool is_red_suit(int suit) {
-    bool is_red = (suit == 2 || suit == 3); // ハートまたはダイヤ
+    bool is_red = (suit == 3 || suit == 4); // ハートまたはダイヤ
     return is_red;
 }
 
@@ -86,9 +91,6 @@ void generate_card_row(int suit, int number, int row, char* buffer) {
         case 4: // 下枠
             strcpy(buffer, "└─────┘");
             break;
-        default:
-            strcpy(buffer, "│     │");
-            break;
     }
 }
 
@@ -106,17 +108,17 @@ void print_card(int suit, int number) {
 }
 
 /**
- * @brief 二次元配列でカードを横並びで出力する関数
+ * @brief 配列でカードを横並びで出力する関数
  * @param cards Card構造体の配列
  * @param count カードの枚数
  */
-void _print_cards(Card cards[][2], int count) {
+void _print_cards(Card cards[], int count) {
     char buffer[50];
     
     // 各行を順番に出力
     for (int row = 0; row < CARD_HEIGHT; row++) {
         for (int i = 0; i < count; i++) {
-            generate_card_row(cards[i]->suit, cards[i]->number, row, buffer);
+            generate_card_row(cards[i].suit, cards[i].number, row, buffer);
             printf("%s", buffer);
             
             if (i < count - 1) {
@@ -131,7 +133,7 @@ int main() {
     print_card(1, 1);
     printf("\n");
     
-    Card cards1[][2] = {
+    Card cards[] = {
         {1, 1},   // スペードのA
         {3, 13},  // ハートのK
         {4, 10},  // ダイヤの10
@@ -139,7 +141,7 @@ int main() {
         {0, 0}    // 何も書かれていないカード
     };
     
-    print_cards(cards1);
+    print_cards(cards);
     
     printf("\n");
     

@@ -9,7 +9,7 @@
  * @param text 対象の文字列
  * @return 行数
  */
-extern int count_text_line(const char* text) {
+extern int count_text_line(char* text) {
     int line_count = 1; // 最低1行はある
     size_t text_length = strlen(text);
     
