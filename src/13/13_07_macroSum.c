@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#define NUM_MIN 5
-#define NUM_MAX 15
+#define NUM_MIN (5)
+#define NUM_MAX (15)
 
 int main() {
   int sum = 0;

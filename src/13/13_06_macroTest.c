@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define NUM 10
+#define NUM (10)
 
 int main() {
   int sum = 0;
