@@ -1,0 +1,14 @@
+prefix=/Users/k25012kk/src/prg1K/prg1/src/final-issue/lib/ffmpeg-build
+exec_prefix=${prefix}
+libdir=/Users/k25012kk/src/prg1K/prg1/src/final-issue/lib/ffmpeg-build/lib
+includedir=/Users/k25012kk/src/prg1K/prg1/src/final-issue/lib/ffmpeg-build/include
+
+Name: libswscale
+Description: FFmpeg image rescaling library
+Version: 8.3.100
+Requires: 
+Requires.private: libavutil >= 59.39.100
+Conflicts:
+Libs: -L${libdir}  -lswscale 
+Libs.private: -lm
+Cflags: -I${includedir}

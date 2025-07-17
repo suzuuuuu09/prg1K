@@ -1,0 +1,14 @@
+prefix=/Users/k25012kk/src/prg1K/prg1/src/final-issue/lib/ffmpeg-build
+exec_prefix=${prefix}
+libdir=/Users/k25012kk/src/prg1K/prg1/src/final-issue/lib/ffmpeg-build/lib
+includedir=/Users/k25012kk/src/prg1K/prg1/src/final-issue/lib/ffmpeg-build/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 59.39.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -pthread -lm -framework VideoToolbox -L/opt/homebrew/Cellar/libx11/1.8.12/lib -lX11 -framework CoreFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices
+Cflags: -I${includedir}
