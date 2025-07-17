@@ -10,59 +10,23 @@
 #include <sys/select.h>
 
 #include "lib/consts.c"
-#include "lib/text_displayer.c"
+#include "lib/display_manager.c"
 #include "lib/animation.c"
+#include "lib/terminal.c"
 
-// ターミナルの設定を保存する構造体
-struct termios orig_termios;
-
-// シグナルハンドラー
-void signal_handler(int sig) {
-    (void)sig; // 未使用パラメータ警告を抑制
-    printf("\n\033[0m\033[?25h"); // 色をリセット、カーソルを表示
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-    exit(0);
-}
-
-// ターミナルの設定を変更（cbreak mode）
-void enable_raw_mode() {
-    tcgetattr(STDIN_FILENO, &orig_termios);
-    signal(SIGINT, signal_handler);
-    
-    struct termios raw = orig_termios;
-    raw.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
-
-// ターミナルの設定を元に戻す
-void disable_raw_mode() {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-}
-
-// ターミナルのサイズを取得
-void get_terminal_size(int *width, int *height) {
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    *width = w.ws_col;
-    *height = w.ws_row;
-}
-
-// RGB値からANSIカラーコードを生成
-void print_colored_block(int r, int g, int b) {
-    printf("\033[38;2;%d;%d;%dm█", r, g, b);
-}
+#define DEFAULT_FPS 30.0f
 
 // ロゴを表示
 void display_logo() {
     print_lines_with_interval(LOGO, 0.3);
 }
 
-// 動画の情報を取得する関数
+// 動画の情報を取得する
 void get_video_info(const char *video_path, int *orig_width, int *orig_height, float *fps) {
     char command[1024];
     FILE *pipe;
     
-    // ローカルのffprobeを使用
+    // ffprobeを使用
     snprintf(command, sizeof(command), 
         "./lib/ffmpeg-build/bin/ffprobe -v quiet -print_format csv=p=0 -show_entries stream=width,height,r_frame_rate \"%s\"",
         video_path);
@@ -79,7 +43,7 @@ void get_video_info(const char *video_path, int *orig_width, int *orig_height, f
             if (sscanf(fps_str, "%d/%d", &num, &den) == 2) {
                 *fps = (float)num / den;
             } else {
-                *fps = 30.0; // デフォルト
+                *fps = DEFAULT_FPS; // デフォルト
             }
         }
         pclose(pipe);
@@ -90,7 +54,7 @@ void get_video_info(const char *video_path, int *orig_width, int *orig_height, f
 void calculate_display_size(int term_width, int term_height, int orig_width, int orig_height, 
                            int *display_width, int *display_height) {
     // ターミナルの文字のアスペクト比を正確に設定 (macOSでは約0.4-0.45が適切)
-    const float char_aspect_ratio = 0.42; // 文字の実際の縦横比
+    const float char_aspect_ratio = 0.43; // 文字の実際の縦横比
     
     // 利用可能なスペース（余裕を持たせる）
     int available_width = term_width - 4;
@@ -173,8 +137,19 @@ void calculate_display_size_python_style(int term_width, int term_height,
     if (*display_height < 10) *display_height = 10;
 }
 
-// 動画を再生する関数
-void play_video(const char *video_path) {
+// 高精度タイマー用の構造体と関数
+struct timespec get_current_time() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts;
+}
+
+long timespec_diff_us(struct timespec start, struct timespec end) {
+    return (end.tv_sec - start.tv_sec) * 1000000L + (end.tv_nsec - start.tv_nsec) / 1000L;
+}
+
+// 最適化された動画再生関数
+void play_video_optimized(const char *video_path) {
     int term_width, term_height;
     int orig_width, orig_height;
     int display_width, display_height;
@@ -191,21 +166,15 @@ void play_video(const char *video_path) {
         return;
     }
     
-    // 表示サイズを計算（Pythonスタイルを使用）
+    // 表示サイズを計算
     calculate_display_size_python_style(term_width, term_height, orig_width, orig_height, 
                           &display_width, &display_height);
     
-    printf("元の解像度: %dx%d\n", orig_width, orig_height);
-    printf("表示解像度: %dx%d\n", display_width, display_height);
-    printf("FPS: %.1f\n", fps);
-    
-    // より正確なffmpegコマンドを構築（正確なサイズ指定）
+    // ffmpegコマンドを構築（最適化）
     char command[1024];
     snprintf(command, sizeof(command), 
-        "./lib/ffmpeg-build/bin/ffmpeg -i \"%s\" -vf \"scale=%d:%d:flags=lanczos,fps=%.1f\" -f rawvideo -pix_fmt rgb24 -y /tmp/video_frames.raw 2>/dev/null",
+        "./lib/ffmpeg-build/bin/ffmpeg -i \"%s\" -vf \"scale=%d:%d:flags=lanczos\" -r %.1f -f rawvideo -pix_fmt rgb24 -y /tmp/video_frames.raw 2>/dev/null",
         video_path, display_width, display_height, fps);
-    
-    printf("実行するコマンド: %s\n", command);
     
     printf("動画を処理中...\n");
     int result = system(command);
@@ -214,88 +183,98 @@ void play_video(const char *video_path) {
         return;
     }
     
-    // 生成されたファイルのサイズを確認
-    FILE *test_file = fopen("/tmp/video_frames.raw", "rb");
-    if (test_file) {
-        fseek(test_file, 0, SEEK_END);
-        long file_size = ftell(test_file);
-        fclose(test_file);
-        printf("生成されたファイルサイズ: %ld bytes\n", file_size);
-        printf("期待されるフレームサイズ: %ld bytes\n", (long)(display_width * display_height * 3));
-        printf("フレーム数の推定: %.1f\n", (float)file_size / (display_width * display_height * 3));
-    }
-    
     FILE *frames_file = fopen("/tmp/video_frames.raw", "rb");
     if (!frames_file) {
         printf("エラー: フレームファイルを開けません。\n");
         return;
     }
     
-    // フレームサイズを計算（型を合わせる）
-    size_t frame_size = (size_t)(display_width * display_height * 3); // RGB24
+    // フレームサイズを計算
+    size_t frame_size = (size_t)(display_width * display_height * 3);
     unsigned char *frame_buffer = malloc(frame_size);
     
-    // 最初のフレームのデータを確認
-    size_t bytes_read = fread(frame_buffer, 1, frame_size, frames_file);
-    printf("最初のフレーム読み込み: %zu bytes (期待値: %zu)\n", bytes_read, frame_size);
-    
-    if (bytes_read == frame_size) {
-        printf("最初の数ピクセルのRGB値:\n");
-        for (int i = 0; i < 10 && i * 3 < (int)bytes_read; i++) {
-            printf("ピクセル%d: R=%d G=%d B=%d\n", i, 
-                   frame_buffer[i*3], frame_buffer[i*3+1], frame_buffer[i*3+2]);
-        }
+    if (!frame_buffer) {
+        printf("エラー: メモリの確保に失敗しました。\n");
+        fclose(frames_file);
+        return;
     }
-    
-    // ファイルの先頭に戻る
-    fseek(frames_file, 0, SEEK_SET);
     
     enter_fullscreen();
     hide_cursor();
     enable_raw_mode();
     
     printf("動画を再生中... (qで終了)\n");
-    sleep(2);
+    sleep(1);
     
-    // フレーム間隔を計算
-    int frame_delay = (int)(1000000 / fps); // マイクロ秒
+    // フレーム間隔をマイクロ秒で計算
+    long frame_interval_us = (long)(1000000.0 / fps);
     
     // 画面の中央に配置するためのオフセット計算
     int offset_x = (term_width - display_width) / 2;
     int offset_y = (term_height - display_height) / 2;
     
-    while (fread(frame_buffer, 1, frame_size, frames_file) == frame_size) {
-        clear_screen();
-        
-        // フレームを中央に表示
-        for (int y = 0; y < display_height; y++) {
-            cursor_move(offset_x + 1, offset_y + y + 1);
-            for (int x = 0; x < display_width; x++) {
-                int pixel_idx = (y * display_width + x) * 3;
-                int r = frame_buffer[pixel_idx];
-                int g = frame_buffer[pixel_idx + 1];
-                int b = frame_buffer[pixel_idx + 2];
-                print_colored_block(r, g, b);
-            }
-            printf("\033[0m"); // 色をリセット
+    // タイマー初期化
+    struct timespec frame_start_time = get_current_time();
+    struct timespec next_frame_time = frame_start_time;
+    
+    // 最適化されたフレーム再生ループ
+    size_t bytes_read;
+    
+    while ((bytes_read = fread(frame_buffer, 1, frame_size, frames_file)) > 0) {
+        if (bytes_read != frame_size) {
+            continue; // 不完全なフレームをスキップ
         }
         
-        fflush(stdout);
-        usleep(frame_delay);
+        // フレーム表示タイミングを計算
+        next_frame_time.tv_nsec += frame_interval_us * 1000L;
+        if (next_frame_time.tv_nsec >= 1000000000L) {
+            next_frame_time.tv_sec += 1;
+            next_frame_time.tv_nsec -= 1000000000L;
+        }
         
-        // 'q'キーが押されたかチェック
+        clear_screen();
+        
+        // フレームを高速表示
+        for (int y = 0; y < display_height; y++) {
+            printf("\033[%d;%dH", offset_y + y + 1, offset_x + 1);
+            
+            for (int x = 0; x < display_width; x++) {
+                int pixel_idx = (y * display_width + x) * 3;
+                
+                if (pixel_idx + 2 < (int)frame_size) {
+                    unsigned char r = frame_buffer[pixel_idx];
+                    unsigned char g = frame_buffer[pixel_idx + 1];
+                    unsigned char b = frame_buffer[pixel_idx + 2];
+                    
+                    print_colored_block(r, g, b);
+                    fflush(stdout);
+                }
+            }
+        }
+        
+        // 色をリセット
+        reset_color();
+        fflush(stdout);
+        
+        // キー入力チェック（非ブロッキング）
         fd_set readfds;
-        struct timeval timeout;
+        struct timeval timeout = {0, 0}; // タイムアウトなし
         FD_ZERO(&readfds);
         FD_SET(STDIN_FILENO, &readfds);
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 0;
         
         if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout) > 0) {
             char ch = getchar();
             if (ch == 'q' || ch == 'Q') {
                 break;
             }
+        }
+        
+        // 正確なフレームタイミングで待機
+        struct timespec current_time = get_current_time();
+        long sleep_time_us = timespec_diff_us(current_time, next_frame_time);
+        
+        if (sleep_time_us > 0 && sleep_time_us < 1000000) {
+            usleep(sleep_time_us);
         }
     }
     
@@ -308,8 +287,6 @@ void play_video(const char *video_path) {
     
     // 一時ファイルを削除
     remove("/tmp/video_frames.raw");
-    
-    printf("再生が完了しました。\n");
 }
 
 // ファイルの存在を確認
@@ -358,8 +335,8 @@ int main() {
     // ローディングアニメーション
     loading_animation(2.0);
     
-    // 動画を再生
-    play_video(video_path);
+    // 最適化された動画再生を使用
+    play_video_optimized(video_path);
     
     return 0;
 }

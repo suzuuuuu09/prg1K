@@ -34,6 +34,11 @@ void exit_fullscreen() {
     printf("\033[?1049l"); // 通常画面バッファに戻る
 }
 
+// 色をリセット
+void reset_color() {
+    printf("\033[0m");
+}
+
 // n秒間スリープする
 void sleep_seconds(float seconds) {
     int microseconds = (int)(seconds * MICROSECONDS_PER_SECOND);
