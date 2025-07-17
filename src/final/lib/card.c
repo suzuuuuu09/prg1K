@@ -105,6 +105,7 @@ void print_card(int suit, int number) {
         generate_card_row(suit, number, row, buffer);
         printf("%s\n", buffer);
     }
+    fflush(stdout); // 出力を即座に反映
 }
 
 /**
@@ -127,23 +128,5 @@ void _print_cards(Card cards[], int count) {
         }
         printf("\n");
     }
-}
-
-int main() {
-    print_card(1, 1);
-    printf("\n");
-    
-    Card cards[] = {
-        {1, 1},   // スペードのA
-        {3, 13},  // ハートのK
-        {4, 10},  // ダイヤの10
-        {2, 11},  // クローバーのJ
-        {0, 0}    // 何も書かれていないカード
-    };
-    
-    print_cards(cards);
-    
-    printf("\n");
-    
-    return 0;
+    fflush(stdout); // 出力を即座に反映
 }

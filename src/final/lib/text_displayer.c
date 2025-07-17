@@ -2,8 +2,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "./utils.c"
+#include "./consts.c"
 
 /**
  * @brief n秒おきに文字列を表示する関数
@@ -17,7 +19,16 @@ void print_interval(char* text, float interval) {
         fflush(stdout); // 出力を即座に反映
         sleep_seconds(interval);
     }
-    printf("\n");
+}
+
+void sprint_interval(float interval, const char* format, ...) {
+    char buffer[256];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    
+    print_interval(buffer, interval);
 }
 
 /**
@@ -25,7 +36,7 @@ void print_interval(char* text, float interval) {
  * @param text 表示する文字列
  * @param interval 表示間隔（秒）
 */
-void print_interval_line(char* text, float interval) {
+void print_interval_line(const char* text, float interval) {
     char* text_copy = strdup(text); // 元の文字列を変更しないようにコピー
     char* line = strtok(text_copy, "\n");
     
