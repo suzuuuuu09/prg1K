@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MICROSECONDS_PER_SECOND (1000000)
+#define MICROSECONDS_PER_SECOND 1000000
 
 // 画面をクリア
 void clear_screen() {
@@ -43,4 +43,14 @@ void reset_color() {
 void sleep_seconds(float seconds) {
     int microseconds = (int)(seconds * MICROSECONDS_PER_SECOND);
     usleep(microseconds);
+}
+
+// ファイルの存在を確認
+int file_exists(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file) {
+        fclose(file);
+        return 1;
+    }
+    return 0;
 }

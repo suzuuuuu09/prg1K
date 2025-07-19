@@ -7,6 +7,7 @@ typedef struct {
     float fps;
 } VideoInfo;
 
+// ターミナル内で表示する動画のサイズ
 typedef struct {
     int width;
     int height;
