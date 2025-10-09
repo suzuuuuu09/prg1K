@@ -1,0 +1,27 @@
+# 各種変数の設定
+RM      = /bin/rm -f
+CC      = gcc
+DEBUG   = -g
+LIBS    = -lm
+CFLAGS  = -O -Wall ${DEBUG}
+LDFLAGS =
+
+# オブジェクトファイル名 (のリスト)
+# 実行ファイル名 (のリスト)
+OBJS    = kadai1-main.o kadai1-sub.o
+PROGS   = program
+
+# make all のトップレベル
+all : ${PROGS}
+
+program : ${OBJS}
+	${CC} ${LDFLAGS} -o program ${OBJS} ${LIBS}
+
+.c.o :
+	${CC} ${CFLAGS} -c $<
+
+# 「make clean」と入力すると「.o」や「~ で終わるファイル」が消去される
+.PHONY : clean
+clean:
+	$(RM) $(OBJS) *~
+
