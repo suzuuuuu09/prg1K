@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c99
 LDFLAGS = -lm
 TARGET = termiplay
-SOURCE = 15_k25012_issues.c
+SOURCE = 15_issue_k25012.c
 
 # デフォルトターゲット
 all: $(TARGET)
